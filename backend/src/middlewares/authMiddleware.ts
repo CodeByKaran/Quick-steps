@@ -1,9 +1,16 @@
+import "dotenv/config";
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
 
-// Extend Express Request to include 'user'
+export interface UserPayload {
+  id: number;
+  username: string;
+  email: string;
+}
+
 export interface AuthRequest extends Request {
-  user?: string | JwtPayload;
+  user?: UserPayload;
 }
 
 // Replace with your secret, use env for real projects
@@ -14,21 +21,34 @@ export function AuthMiddleware(
   res: Response,
   next: NextFunction
 ) {
-  const authHeader = req.headers["authorization"];
+  console.log(`jwt secret: ${SECRET_KEY}`);
+
+  const authHeader = req.headers["authorization"] || req.cookies?.accessToken;
+  console.log(`Auth Header: ${authHeader}`);
+
   if (!authHeader) {
     return res.status(401).json({ message: "No token provided" });
   }
+  let token;
+  if (req.headers["authorization"]) {
+    token = authHeader.replace("Bearer ", "").trim();
+  }
 
-  const token = authHeader.replace("Bearer ", "").trim();
+  if (req.cookies?.accessToken) token = authHeader.trim();
+
+  console.log(`Token: ${token}`);
+
   if (!token) {
     return res.status(401).json({ message: "Missing token" });
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
+    const decoded = jwt.verify(token, SECRET_KEY) as UserPayload;
     req.user = decoded;
     next();
-  } catch (err) {
-    return res.status(403).json({ message: "Invalid or expired token" });
+  } catch (err: unknown) {
+    return res
+      .status(403)
+      .json({ message: "Invalid error occured while checking auth" });
   }
 }

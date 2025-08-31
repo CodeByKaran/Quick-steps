@@ -10,6 +10,7 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
+import { AuthRequest } from "../middlewares/authMiddleware.ts";
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle({ client: sql });
 
@@ -37,7 +38,7 @@ const signinSchema = z.object({
 
 // Generate JWT Tokens
 const generateAccessToken = (payload: object) =>
-  jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, { expiresIn: "15m" });
+  jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, { expiresIn: "1h" });
 
 const generateRefreshToken = (payload: object) =>
   jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d" });
@@ -145,7 +146,7 @@ export const userSignin = asyncHandler(async (req: Request, res: Response) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 60 * 60 * 1000, // 15 minutes
+    maxAge: 60 * 60 * 1000, // 60 minutes
   });
 
   // Set refresh token cookie (longer-lived)
@@ -167,6 +168,72 @@ export const userSignin = asyncHandler(async (req: Request, res: Response) => {
     })
   );
 });
+
+//user Signout controller
+export const userSignout = asyncHandler(async (req: Request, res: Response) => {
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+  res
+    .status(200)
+    .json(new SuccessResponse("User logged out successfully", null));
+});
+
+//user Delete controller
+export const userDeletAccount = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { username } = req.body;
+    if (!username) {
+      return res
+        .status(400)
+        .json(new ErrorResponse("VALIDATION_ERROR", "Username is required"));
+    }
+
+    if (!req.user || !req.user.username) {
+      return res
+        .status(401)
+        .json(new ErrorResponse("AUTH_ERROR", "Unauthorized"));
+    }
+
+    if (req.user.username !== username) {
+      return res
+        .status(403)
+        .json(
+          new ErrorResponse(
+            "AUTH_ERROR",
+            "You can only delete your own account"
+          )
+        );
+    }
+
+    // Step 1: Select user details
+    const userExists = await db
+      .select({
+        id: usersTable.id,
+        username: usersTable.username,
+        email: usersTable.email,
+        avatarUrl: usersTable.avatarUrl,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.username, username))
+      .limit(1);
+
+    if (userExists.length === 0) {
+      return res
+        .status(404)
+        .json(new ErrorResponse("NOT_FOUND", "User not found"));
+    }
+
+    // Step 2: Delete user without returning
+    await db.delete(usersTable).where(eq(usersTable.username, username));
+
+    // Respond with the user data retrieved before deletion
+    return res.status(200).json(
+      new SuccessResponse("User account deleted successfully", {
+        user: userExists[0],
+      })
+    );
+  }
+);
 
 // Token refresh endpoint
 export const refreshAccessToken = asyncHandler(
@@ -199,7 +266,7 @@ export const refreshAccessToken = asyncHandler(
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 60 * 60 * 1000, // 15 minutes
       });
 
       res.status(200).json(new SuccessResponse("Access token refreshed", null));
