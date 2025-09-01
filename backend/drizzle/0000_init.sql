@@ -10,6 +10,8 @@ CREATE TABLE "snippets" (
 	"markdown" varchar(5000) NOT NULL,
 	"description" varchar(1000),
 	"user_id" integer,
+	"createdAt" timestamp (6) with time zone DEFAULT now(),
+	"updatedAt" timestamp (6) with time zone DEFAULT now(),
 	CONSTRAINT "snippets_title_unique" UNIQUE("title")
 );
 --> statement-breakpoint

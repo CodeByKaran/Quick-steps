@@ -1,6 +1,6 @@
 {
-  "id": "77e29aa9-64ab-4a8d-95ad-519838125cb4",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "96d78525-7ef2-4eb3-b0bc-cf212bf43f17",
+  "prevId": "77e29aa9-64ab-4a8d-95ad-519838125cb4",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -112,6 +112,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "tags": {
+          "name": "tags",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "user_id": {
           "name": "user_id",
           "type": "integer",
@@ -154,6 +160,21 @@
           "columns": [
             {
               "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tags_idx": {
+          "name": "tags_idx",
+          "columns": [
+            {
+              "expression": "tags",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

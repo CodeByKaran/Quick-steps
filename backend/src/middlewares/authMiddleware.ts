@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
-import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
+import jwt from "jsonwebtoken";
 
 export interface UserPayload {
   id: number;
@@ -23,18 +22,24 @@ export function AuthMiddleware(
 ) {
   console.log(`jwt secret: ${SECRET_KEY}`);
 
-  const authHeader = req.headers["authorization"] || req.cookies?.accessToken;
-  console.log(`Auth Header: ${authHeader}`);
+  const authHeader = req.headers.authorization || req.cookies?.accessToken;
+  console.log(`Auth Header with bearer: ${req.headers.authorization}`);
+  console.log(`Auth token from cookie: ${req.cookies?.accessToken}`);
 
   if (!authHeader) {
     return res.status(401).json({ message: "No token provided" });
   }
   let token;
-  if (req.headers["authorization"]) {
+  if (req.headers.authorization?.startsWith("Bearer ")) {
     token = authHeader.replace("Bearer ", "").trim();
   }
 
-  if (req.cookies?.accessToken) token = authHeader.trim();
+  if (
+    !req.headers.authorization?.startsWith("Bearer ") &&
+    req.cookies?.accessToken
+  ) {
+    token = authHeader.trim();
+  }
 
   console.log(`Token: ${token}`);
 
