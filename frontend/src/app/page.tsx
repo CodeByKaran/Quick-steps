@@ -4,10 +4,6 @@ import { ModeToggle } from "@/components/theme-toggle";
 export default function Home() {
   return (
     <div className="min-h-screen bg-background px-4 py-8">
-      <header className="max-w-7xl mx-auto flex justify-between items-center mb-8">
-        <Navbar />
-      </header>
-
       <main className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-12">
         {/* Example Cards */}
         {[

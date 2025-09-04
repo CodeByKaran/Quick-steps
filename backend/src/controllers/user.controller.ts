@@ -37,10 +37,10 @@ const signinSchema = z.object({
 });
 
 // Generate JWT Tokens
-const generateAccessToken = (payload: object) =>
+export const generateAccessToken = (payload: object) =>
   jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, { expiresIn: "1h" });
 
-const generateRefreshToken = (payload: object) =>
+export const generateRefreshToken = (payload: object) =>
   jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d" });
 
 // User Signup controller

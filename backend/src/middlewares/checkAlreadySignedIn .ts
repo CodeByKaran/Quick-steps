@@ -3,6 +3,10 @@ import jwt from "jsonwebtoken";
 import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
 import { ca } from "zod/locales";
 import { ErrorResponse } from "../utils/apiErrorResponse.ts";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../controllers/user.controller.ts";
 
 export const checkAlreadySignedIn = (
   req: Request,
@@ -27,34 +31,45 @@ export const checkAlreadySignedIn = (
 
         if (refreshToken) {
           try {
-            const jwtPayload = jwt.verify(
-              refreshToken,
-              process.env.JWT_REFRESH_SECRET!
-            ) as {
+            interface UserPayload {
               id: string;
               username: string;
               email: string;
-            };
+            }
+            const jwtPayload = jwt.verify(
+              refreshToken,
+              process.env.JWT_REFRESH_SECRET!
+            ) as UserPayload;
 
             if (!jwtPayload?.id) {
               next();
             }
 
-            const newAccessToken = jwt.sign(
-              {
-                id: jwtPayload.id,
-                username: jwtPayload.username,
-                email: jwtPayload.email,
-              },
-              process.env.JWT_ACCESS_SECRET!,
-              { expiresIn: "1h" }
-            );
+            const newAccessToken = generateAccessToken({
+              id: jwtPayload.id,
+              username: jwtPayload.username,
+              email: jwtPayload.email,
+            });
+
+            const newRefresToken = generateRefreshToken({
+              id: jwtPayload.id,
+              username: jwtPayload.username,
+              email: jwtPayload.email,
+            });
 
             res.cookie("accessToken", newAccessToken, {
               httpOnly: true,
               secure: process.env.NODE_ENV === "production",
               sameSite: "strict",
-              maxAge: 60 * 60 * 1000, // 15 minutes
+              maxAge: 60 * 60 * 1000, // 60 minutes
+            });
+
+            // Set refresh token cookie (longer-lived)
+            res.cookie("refreshToken", newRefresToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "strict",
+              maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             });
 
             return res.status(200).json(

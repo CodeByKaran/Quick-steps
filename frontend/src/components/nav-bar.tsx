@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import {
   Drawer,
   DrawerContent,
@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import Link from "next/link";
-import { ModeToggle } from "./theme-toggle";
+import { DialogTitle } from "./ui/dialog";
 
 const navLinks = [
   { label: "Snippets", href: "/snippets" },
@@ -24,20 +24,33 @@ const navLinks = [
   { label: "Tags", href: "/tags" },
 ];
 
-const glassmorphismBg =
-  "bg-white/30 backdrop-blur-md border border-white/20 shadow-lg";
-
 export default function Navbar() {
   const [active, setActive] = useState("Snippets");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const { scrollY, scrollYProgress } = useScroll();
+  const [scrollDirection, setScrollDirection] = useState("down");
+
+  useMotionValueEvent(scrollY, "change", (current) => {
+    const diff = current - scrollY.getPrevious()!;
+    setScrollDirection(diff > 0 ? "down" : "up");
+  });
+
+  useEffect(() => {
+    console.log(
+      `Scroll direction: ${scrollDirection},\n Scroll Y Progress: ${scrollYProgress.get()}`
+    );
+  }, [scrollDirection, scrollYProgress]);
+
   return (
     <>
       {/* Navbar */}
-      <header
+      <motion.header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 h-16",
-          glassmorphismBg
+          "sticky z-50 flex items-center justify-between px-4 md:px-8 h-16 bg-background w-full border-b border-border",
+          scrollDirection === "up" &&
+            "top-0 left-0 right-0 transition-all duration-300",
+          scrollDirection === "down" && "-top-16 transition-all duration-300"
         )}
       >
         {/* Left: Animated Logo Text */}
@@ -49,7 +62,7 @@ export default function Navbar() {
             stiffness: 120,
             damping: 18,
           }}
-          className="text-2xl font-extrabold select-none cursor-default"
+          className="text-2xl font-extrabold select-none cursor-default font-poppins"
           aria-label="Quick Snippets"
         >
           Quick Snippets
@@ -74,7 +87,7 @@ export default function Navbar() {
               {active === link.label && (
                 <motion.span
                   layoutId="underline"
-                  className="absolute left-0 bottom-0 w-full h-1 bg-primary rounded-full"
+                  className="absolute left-0 -bottom-2 w-full h-1 bg-primary rounded-full"
                   transition={{ type: "spring", stiffness: 120, damping: 20 }}
                 />
               )}
@@ -99,7 +112,11 @@ export default function Navbar() {
         </div>
 
         {/* Mobile menu button (visible only on mobile) */}
-        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <Drawer
+          open={drawerOpen}
+          onOpenChange={setDrawerOpen}
+          direction="right"
+        >
           <DrawerTrigger asChild>
             <Button
               variant="ghost"
@@ -125,29 +142,39 @@ export default function Navbar() {
           </DrawerTrigger>
 
           <DrawerPortal>
-            <DrawerOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-            <DrawerContent className="fixed top-0 right-0 bottom-0 w-72 bg-white/30 backdrop-blur-md border-l border-white/20 shadow-lg p-6 flex flex-col">
-              <Button
-                variant="ghost"
-                className="self-end mb-4"
-                onClick={() => setDrawerOpen(false)}
-                aria-label="Close menu"
-              >
-                {/* Close icon */}
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </Button>
+            <DrawerOverlay className="fixed inset-0 bg-background/50 blur-xl" />
+            <DrawerContent
+              title="navigation menu"
+              className="fixed top-0 right-0 bottom-0 w-72 bg-background border-l border-border shadow-lg p-4 flex flex-col rounded-l-xl"
+            >
+              <DialogTitle className="mb-7 mt-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xl font-semibold font-poppins text-foreground">
+                    Navigations
+                  </span>
+                  <Button
+                    variant="ghost"
+                    className="self-center "
+                    onClick={() => setDrawerOpen(false)}
+                    aria-label="Close menu"
+                  >
+                    {/* Close icon */}
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </Button>
+                </div>
+              </DialogTitle>
 
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -162,7 +189,7 @@ export default function Navbar() {
                       href={link.href}
                       className={cn(
                         "px-4 py-2 rounded-md text-white font-semibold transition-colors hover:bg-white/20",
-                        active === link.label && "bg-white/30"
+                        active === link.label && "bg-primary"
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -177,7 +204,7 @@ export default function Navbar() {
                 <Input
                   type="search"
                   placeholder="Search snippets..."
-                  className="rounded-md bg-white/20 border border-white/30 placeholder-white/70 text-white focus:outline-none focus:ring-2 focus:ring-white"
+                  className="rounded-md bg-primary border border-white/30 placeholder-white/70 text-white focus:outline-none focus:ring-2 focus:ring-white"
                   aria-label="Search snippets"
                 />
                 <div className="mt-auto flex items-center gap-3">
@@ -194,7 +221,7 @@ export default function Navbar() {
             </DrawerContent>
           </DrawerPortal>
         </Drawer>
-      </header>
+      </motion.header>
     </>
   );
 }

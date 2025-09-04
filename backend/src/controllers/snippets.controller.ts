@@ -5,10 +5,23 @@ import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
 import { ErrorResponse } from "../utils/apiErrorResponse.ts";
 import z from "zod";
 import { snippetsTable } from "../models/snippets.model.ts";
-import { and, asc, desc, eq, gt, ilike, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  ilike,
+  inArray,
+  like,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { usersTable } from "../models/user.model.ts";
+import { ta } from "zod/locales";
 
 const sqlClient = neon(process.env.DATABASE_URL!);
 const db = drizzle({ client: sqlClient });
@@ -17,6 +30,7 @@ const createSnippetSchema = z.object({
   title: z.string().min(1, "Title is required").max(255),
   markdown: z.string().min(1, "Markdown content is required").max(5000),
   description: z.string().max(1000).optional(),
+  tags: z.string().max(500).optional(),
 });
 
 const updateSnippetSchema = z.object({
@@ -60,7 +74,7 @@ export const createSnippet = asyncHandler(
     }
 
     const userId = userPayload.id;
-    const { title, markdown, description } = parsed.data;
+    const { title, markdown, description, tags } = parsed.data;
 
     // Check duplicate title
     const existing = await db
@@ -85,12 +99,16 @@ export const createSnippet = asyncHandler(
         markdown,
         description,
         userId,
+        tags,
       })
       .returning({
         id: snippetsTable.id,
         title: snippetsTable.title,
         markdown: snippetsTable.markdown,
         description: snippetsTable.description,
+        tags: snippetsTable.tags,
+        createdAt: snippetsTable.createdAt,
+        updatedAt: snippetsTable.updatedAt,
         userId: snippetsTable.userId,
       });
 
@@ -106,6 +124,7 @@ export const createSnippet = asyncHandler(
 export const updateSnippet = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     // Get snippet ID from URL params
+
     const snippetId = parseInt(req.params.id);
 
     if (!snippetId || isNaN(snippetId)) {
@@ -420,6 +439,7 @@ export const paginateRandomSnippets = asyncHandler(
                 paginatedResult[paginatedResult.length - 1].snippetTitle,
             }
           : null,
+      hasNextPage,
       limit: limitNum,
     };
 
@@ -509,81 +529,125 @@ export const searchSnippets = asyncHandler(
 export const PaginateUserSnippets = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = parseInt(req.params.userId);
-    const { limit, page, cursorId, cursorKey, orderby } = req.query;
+    const { limit, cursorId, orderby } = req.query;
+
+    // Validate userId
+    if (isNaN(userId)) {
+      return res
+        .status(400)
+        .json(new ErrorResponse("VALIDATION_ERROR", "Invalid user ID"));
+    }
 
     const limitNum = limit ? parseInt(limit as string) : 10;
     const cursorIdNum = cursorId ? parseInt(cursorId as string) : undefined;
-    const cursorKeyStr = cursorKey && cursorKey.toString();
 
+    // Validate limit
+    if (limitNum <= 0 || limitNum > 100) {
+      return res
+        .status(400)
+        .json(
+          new ErrorResponse(
+            "VALIDATION_ERROR",
+            "Limit must be between 1 and 100"
+          )
+        );
+    }
+
+    console.log(
+      `User ID: ${userId}, Limit: ${limitNum}, Cursor ID: ${cursorIdNum}, Order By: ${orderby}`
+    );
+
+    // Simplified ID-only pagination condition
+    let whereCondition;
+
+    if (cursorIdNum) {
+      whereCondition = and(
+        eq(snippetsTable.userId, userId),
+        orderby === "asc"
+          ? gt(snippetsTable.id, cursorIdNum)
+          : lt(snippetsTable.id, cursorIdNum)
+      );
+    } else {
+      whereCondition = eq(snippetsTable.userId, userId);
+    }
+
+    // Order by ID only for consistency and performance
     const orderByColumns =
-      orderby === "asc"
-        ? [asc(snippetsTable.title), asc(snippetsTable.id)]
-        : [desc(snippetsTable.title), desc(snippetsTable.id)];
+      orderby === "asc" ? [asc(snippetsTable.id)] : [desc(snippetsTable.id)];
 
+    // Fetch one extra record to determine if there's a next page
     const fetchLimit = limitNum + 1;
 
-    const resultsWithExtra = await db
-      .select({
-        snippetId: snippetsTable.id,
-        snippetTitle: snippetsTable.title,
-        snippetDescription: snippetsTable.description,
-        trimmedSnippetMarkdownContent: sql`substring(${snippetsTable.markdown}, 1, 200)`,
-        userId: snippetsTable.userId,
-      })
-      .from(snippetsTable)
-      .where(
-        cursorId && cursorKey
-          ? or(
-              gt(snippetsTable.title, cursorKey as string),
-              and(
-                eq(snippetsTable.title, cursorKey as string),
-                eq(snippetsTable.userId, userId),
-                cursorIdNum !== undefined
-                  ? gt(snippetsTable.id, cursorIdNum)
-                  : undefined
-              )
-            )
-          : undefined
-      )
-      .limit(fetchLimit)
-      .leftJoin(usersTable, eq(snippetsTable.userId, userId))
-      .orderBy(...orderByColumns);
+    try {
+      // Get paginated snippets
+      const resultsWithExtra = await db
+        .select({
+          snippetId: snippetsTable.id,
+          snippetTitle: snippetsTable.title,
+          snippetDescription: snippetsTable.description,
+          trimmedSnippetMarkdownContent: sql`substring(${snippetsTable.markdown}, 1, 200)`,
+          userId: snippetsTable.userId,
+          createdAt: snippetsTable.createdAt,
+          updatedAt: snippetsTable.updatedAt,
+        })
+        .from(snippetsTable)
+        .where(whereCondition)
+        .orderBy(...orderByColumns)
+        .limit(fetchLimit);
 
-    const hasNextPage = resultsWithExtra.length === fetchLimit;
+      console.log(`Fetched ${resultsWithExtra.length} records from DB`);
 
-    // Remove the extra record if it exists
-    const paginatedResult = hasNextPage
-      ? resultsWithExtra.slice(0, -1)
-      : resultsWithExtra;
+      const hasNextPage = resultsWithExtra.length === fetchLimit;
 
-    const totalSnippets = await db
-      .select({
-        count: sql<number>`count(*)`,
-      })
-      .from(snippetsTable)
-      .where(eq(snippetsTable.userId, userId));
+      // Remove the extra record if it exists
+      const paginatedResult = hasNextPage
+        ? resultsWithExtra.slice(0, -1)
+        : resultsWithExtra;
 
-    const responseData = {
-      totalSnippets: totalSnippets[0].count,
-      snippets: paginatedResult,
-      nextCursor: paginatedResult.length
-        ? {
-            cursorId: paginatedResult[paginatedResult.length - 1].snippetId,
-            cursorKey: paginatedResult[paginatedResult.length - 1].snippetTitle,
-          }
-        : null,
-      limit: limitNum,
-      page: page ? parseInt(page as string) : 1,
-    };
+      // Get total count for the user (optional - can be expensive for large datasets)
+      const totalSnippets = await db
+        .select({
+          count: sql<number>`count(*)`,
+        })
+        .from(snippetsTable)
+        .where(eq(snippetsTable.userId, userId));
 
-    return res
-      .status(200)
-      .json(
-        new SuccessResponse(
-          "User snippets retrieved successfully",
-          responseData
-        )
-      );
+      // Determine next cursor
+      const nextCursor =
+        hasNextPage && paginatedResult.length > 0
+          ? {
+              cursorId: paginatedResult[paginatedResult.length - 1].snippetId,
+            }
+          : null;
+
+      const responseData = {
+        totalSnippets: totalSnippets[0].count.toString(),
+        snippets: paginatedResult,
+        nextCursor,
+        hasNextPage,
+        limit: limitNum,
+        orderby: orderby || "desc",
+      };
+
+      return res
+        .status(200)
+        .json(
+          new SuccessResponse(
+            "User snippets retrieved successfully",
+            responseData
+          )
+        );
+    } catch (error) {
+      console.error("Error fetching user snippets:", error);
+      return res
+        .status(500)
+        .json(
+          new ErrorResponse(
+            "DATABASE_ERROR",
+            "An error occurred while fetching user snippets"
+          )
+        );
+    }
   }
 );
 
@@ -591,88 +655,132 @@ export const PaginateUserSnippets = asyncHandler(
 export const paginateMySnippets = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
+
     if (!userId) {
       return res
         .status(401)
-        .json(new ErrorResponse("AUTH_ERROR", "User not authenticated"));
+        .json(new ErrorResponse("AUTH_ERROR", "User ID missing in token"));
     }
-    const { limit, page, cursorId, cursorKey, orderby } = req.query;
+
+    const { limit, cursorId, orderby } = req.query;
+
+    // Validate userId
+    if (isNaN(userId)) {
+      return res
+        .status(400)
+        .json(new ErrorResponse("VALIDATION_ERROR", "Invalid user ID"));
+    }
 
     const limitNum = limit ? parseInt(limit as string) : 10;
     const cursorIdNum = cursorId ? parseInt(cursorId as string) : undefined;
-    const cursorKeyStr = cursorKey && cursorKey.toString();
 
+    // Validate limit
+    if (limitNum <= 0 || limitNum > 100) {
+      return res
+        .status(400)
+        .json(
+          new ErrorResponse(
+            "VALIDATION_ERROR",
+            "Limit must be between 1 and 100"
+          )
+        );
+    }
+
+    console.log(
+      `User ID: ${userId}, Limit: ${limitNum}, Cursor ID: ${cursorIdNum}, Order By: ${orderby}`
+    );
+
+    // Simplified ID-only pagination condition
+    let whereCondition;
+
+    if (cursorIdNum) {
+      whereCondition = and(
+        eq(snippetsTable.userId, userId),
+        orderby === "asc"
+          ? gt(snippetsTable.id, cursorIdNum)
+          : lt(snippetsTable.id, cursorIdNum)
+      );
+    } else {
+      whereCondition = eq(snippetsTable.userId, userId);
+    }
+
+    // Order by ID only for consistency and performance
     const orderByColumns =
-      orderby === "asc"
-        ? [asc(snippetsTable.title), asc(snippetsTable.id)]
-        : [desc(snippetsTable.title), desc(snippetsTable.id)];
+      orderby === "asc" ? [asc(snippetsTable.id)] : [desc(snippetsTable.id)];
 
+    // Fetch one extra record to determine if there's a next page
     const fetchLimit = limitNum + 1;
 
-    const resultsWithExtra = await db
-      .select({
-        snippetId: snippetsTable.id,
-        snippetTitle: snippetsTable.title,
-        snippetDescription: snippetsTable.description,
-        trimmedSnippetMarkdownContent: sql`substring(${snippetsTable.markdown}, 1, 200)`,
-        userId: snippetsTable.userId,
-        username: usersTable.username,
-        userAvatar: usersTable.avatarUrl,
-      })
-      .from(snippetsTable)
-      .where(
-        cursorId && cursorKey
-          ? or(
-              gt(snippetsTable.title, cursorKey as string),
-              and(
-                eq(snippetsTable.title, cursorKey as string),
-                eq(snippetsTable.userId, userId),
-                cursorIdNum !== undefined
-                  ? gt(snippetsTable.id, cursorIdNum)
-                  : undefined
-              )
-            )
-          : undefined
-      )
-      .limit(limitNum)
-      .leftJoin(usersTable, eq(snippetsTable.userId, userId))
-      .orderBy(...orderByColumns);
+    try {
+      // Get paginated snippets
+      const resultsWithExtra = await db
+        .select({
+          snippetId: snippetsTable.id,
+          snippetTitle: snippetsTable.title,
+          snippetDescription: snippetsTable.description,
+          trimmedSnippetMarkdownContent: sql`substring(${snippetsTable.markdown}, 1, 200)`,
+          userId: snippetsTable.userId,
+          createdAt: snippetsTable.createdAt,
+          updatedAt: snippetsTable.updatedAt,
+        })
+        .from(snippetsTable)
+        .where(whereCondition)
+        .orderBy(...orderByColumns)
+        .limit(fetchLimit);
 
-    const hasNextPage = resultsWithExtra.length === fetchLimit;
+      console.log(`Fetched ${resultsWithExtra.length} records from DB`);
 
-    // Remove the extra record if it exists
-    const paginatedResult = hasNextPage
-      ? resultsWithExtra.slice(0, -1)
-      : resultsWithExtra;
+      const hasNextPage = resultsWithExtra.length === fetchLimit;
 
-    const totalSnippets = await db
-      .select({
-        count: sql<number>`count(*)`,
-      })
-      .from(snippetsTable)
-      .where(eq(snippetsTable.userId, userId));
+      // Remove the extra record if it exists
+      const paginatedResult = hasNextPage
+        ? resultsWithExtra.slice(0, -1)
+        : resultsWithExtra;
 
-    const responseData = {
-      totalSnippets: totalSnippets[0].count,
-      snippets: paginatedResult,
-      nextCursor: paginatedResult.length
-        ? {
-            cursorId: paginatedResult[paginatedResult.length - 1].snippetId,
-            cursorKey: paginatedResult[paginatedResult.length - 1].snippetTitle,
-          }
-        : null,
-      limit: limitNum,
-      page: page ? parseInt(page as string) : 1,
-    };
+      // Get total count for the user (optional - can be expensive for large datasets)
+      const totalSnippets = await db
+        .select({
+          count: sql<number>`count(*)`,
+        })
+        .from(snippetsTable)
+        .where(eq(snippetsTable.userId, userId));
 
-    return res
-      .status(200)
-      .json(
-        new SuccessResponse(
-          "Random snippets retrieved successfully",
-          responseData
-        )
-      );
+      // Determine next cursor
+      const nextCursor =
+        hasNextPage && paginatedResult.length > 0
+          ? {
+              cursorId: paginatedResult[paginatedResult.length - 1].snippetId,
+            }
+          : null;
+
+      const responseData = {
+        totalSnippets: totalSnippets[0].count.toString(),
+        snippets: paginatedResult,
+        nextCursor,
+        hasNextPage,
+        limit: limitNum,
+        orderby: orderby || "desc",
+      };
+
+      return res
+        .status(200)
+        .json(
+          new SuccessResponse(
+            "User snippets retrieved successfully",
+            responseData
+          )
+        );
+    } catch (error) {
+      console.error("Error fetching user snippets:", error);
+      return res
+        .status(500)
+        .json(
+          new ErrorResponse(
+            "DATABASE_ERROR",
+            "An error occurred while fetching user snippets"
+          )
+        );
+    }
   }
 );
 
@@ -690,31 +798,13 @@ export const paginateSnippetsByTags = asyncHandler(
           )
         );
     }
-    const tags = tagsQuery
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0);
-
-    if (tags.length === 0) {
-      return res
-        .status(400)
-        .json(
-          new ErrorResponse(
-            "VALIDATION_ERROR",
-            "At least one valid tag is required"
-          )
-        );
-    }
-    const { limit, page, cursorId, cursorKey, orderby } = req.query;
+    const { limit, cursorId, orderby } = req.query;
 
     const limitNum = limit ? parseInt(limit as string) : 10;
     const cursorIdNum = cursorId ? parseInt(cursorId as string) : undefined;
-    const cursorKeyStr = cursorKey && cursorKey.toString();
 
     const orderByColumns =
-      orderby === "asc"
-        ? [asc(snippetsTable.title), asc(snippetsTable.id)]
-        : [desc(snippetsTable.title), desc(snippetsTable.id)];
+      orderby === "asc" ? [asc(snippetsTable.id)] : [desc(snippetsTable.id)];
 
     const fetchLimit = limitNum + 1;
 
@@ -724,24 +814,21 @@ export const paginateSnippetsByTags = asyncHandler(
         snippetTitle: snippetsTable.title,
         snippetDescription: snippetsTable.description,
         trimmedSnippetMarkdownContent: sql`substring(${snippetsTable.markdown}, 1, 200)`,
+        snippetsTags: snippetsTable.tags,
         userId: snippetsTable.userId,
         username: usersTable.username,
         userAvatar: usersTable.avatarUrl,
       })
       .from(snippetsTable)
       .where(
-        cursorId && cursorKey
-          ? or(
-              gt(snippetsTable.title, cursorKey as string),
-              and(
-                eq(snippetsTable.title, cursorKey as string),
-                or(...tags.map((tag) => ilike(snippetsTable.tags, `%${tag}%`))),
-                cursorIdNum !== undefined
-                  ? gt(snippetsTable.id, cursorIdNum)
-                  : undefined
-              )
+        cursorId
+          ? and(
+              ilike(snippetsTable.tags, `%${tagsQuery}%`),
+              orderby === "asc"
+                ? gt(snippetsTable.id, cursorIdNum!)
+                : lt(snippetsTable.id, cursorIdNum!)
             )
-          : undefined
+          : ilike(snippetsTable.tags, `%${tagsQuery}%`)
       )
       .limit(limitNum)
       .leftJoin(usersTable, eq(snippetsTable.userId, usersTable.id))
@@ -759,19 +846,21 @@ export const paginateSnippetsByTags = asyncHandler(
         count: sql<number>`count(*)`,
       })
       .from(snippetsTable)
-      .where(or(...tags.map((tag) => ilike(snippetsTable.tags, `%${tag}%`))));
+      .where(ilike(snippetsTable.tags, `%${tagsQuery}%`));
+
+    const nextCursor =
+      hasNextPage && paginatedResult.length > 0
+        ? {
+            cursorId: paginatedResult[paginatedResult.length - 1].snippetId,
+          }
+        : null;
 
     const responseData = {
       totalSnippets: totalSnippets[0].count,
       snippets: paginatedResult,
-      nextCursor: paginatedResult.length
-        ? {
-            cursorId: paginatedResult[paginatedResult.length - 1].snippetId,
-            cursorKey: paginatedResult[paginatedResult.length - 1].snippetTitle,
-          }
-        : null,
+      nextCursor,
+      hasNextPage,
       limit: limitNum,
-      page: page ? parseInt(page as string) : 1,
     };
 
     return res
