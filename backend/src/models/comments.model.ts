@@ -2,6 +2,8 @@ import { integer, pgTable } from "drizzle-orm/pg-core";
 import { usersTable } from "./user.model";
 import { snippetsTable } from "./snippets.model";
 
+//todo change to comments model type schema
+
 export const popularTable = pgTable("populars", {
   id: integer()
     .primaryKey()
