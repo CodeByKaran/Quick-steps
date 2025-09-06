@@ -5,8 +5,10 @@ import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerOverlay,
   DrawerPortal,
+  DrawerTitle,
   DrawerTrigger,
 } from "./ui/drawer";
 import { cn } from "@/lib/utils"; // assume you have this utility
@@ -28,7 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ModeToggle } from "./theme-toggle";
-import { CornerDownRight, Search } from "lucide-react";
+import { CornerDownRight, Equal, Search, X } from "lucide-react";
 import { sampleSnippetsData, users } from "@/lib/data";
 import SnippetCards from "./snippetCards";
 
@@ -58,12 +60,20 @@ export default function Navbar() {
     );
   }, [scrollDirection, scrollYProgress]);
 
+  const handleDrawerToggle = () => {
+    if (drawerOpen) {
+      setDrawerOpen(false);
+    } else {
+      setDrawerOpen(true);
+    }
+  };
+
   return (
     <>
       {/* Navbar */}
       <motion.header
         className={cn(
-          "sticky top-4 z-50 flex items-center justify-between px-4 md:px-8 h-16 bg-background/10 w-[85%] mx-auto backdrop-blur-3xl rounded-xl shadow-xl border border-border",
+          "sticky mt-4 z-50 flex items-center justify-between px-4 md:px-8 h-16 bg-background/10 w-[85%] mx-auto backdrop-blur-3xl rounded-xl shadow-xl border border-border",
           scrollDirection === "up" &&
             "top-4 left-0 right-0 transition-all duration-300",
           scrollDirection === "down" && "-top-16 transition-all duration-300"
@@ -106,7 +116,7 @@ export default function Navbar() {
         </div>
 
         {/* Middle: Nav Links (hidden on mobile) */}
-        <nav className="hidden md:flex gap-3 justify-end ">
+        <nav className="hidden xl:flex gap-3 justify-end ">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -133,9 +143,16 @@ export default function Navbar() {
         </nav>
 
         {/* Right side - Search and Avatar (hidden on mobile) */}
-        <div className="hidden md:flex items-center gap-4  max-w-lg ml-6">
+        <div className="hidden md:flex items-center gap-4 max-w-lg ml-6">
+          <Button
+            variant={"outline"}
+            className="hidden max-xl:block"
+            onClick={handleDrawerToggle}
+          >
+            {drawerOpen ? "Close" : "Menu"}
+          </Button>
           <Dialog>
-            <DialogTrigger asChild>
+            <DialogTrigger asChild className="hidden xl:block">
               <Input
                 type="search"
                 readOnly
@@ -163,7 +180,7 @@ export default function Navbar() {
                 <h3 className="text-foreground font-poppins text-xs flex mb-2">
                   snippets <CornerDownRight size={13} className="ml-2 mt-1" />
                 </h3>
-                <div className="flex flex-col items-stretch gap-3 max-h-[350px] overflow-y-auto pr-2">
+                <div className="flex flex-col items-stretch gap-3 max-h-[350px] overflow-y-auto no-scrollbar pr-2">
                   {sampleSnippetsData.map((snippet, idx) => (
                     <div
                       key={snippet.title + idx}
@@ -197,7 +214,7 @@ export default function Navbar() {
             </DialogContent>
           </Dialog>
           <ModeToggle />
-          <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300">
+          <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300 cursor-default">
             <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
             <AvatarFallback className="bg-primary text-white dark:text-black">
               U
@@ -206,112 +223,60 @@ export default function Navbar() {
         </div>
 
         {/* Mobile menu button (visible only on mobile) */}
-        <Drawer
-          open={drawerOpen}
-          onOpenChange={setDrawerOpen}
-          direction="right"
-        >
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="left">
           <DrawerTrigger asChild>
             <Button
               variant="ghost"
               className="md:hidden text-white focus:ring-0 focus:outline-none"
-              aria-label="Open menu"
+              aria-label="Open and close menu"
+              onClick={handleDrawerToggle}
             >
-              {/* Hamburger icon */}
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
+              {drawerOpen ? (
+                <X className="text-foreground" />
+              ) : (
+                <Equal className="text-foreground" />
+              )}
             </Button>
           </DrawerTrigger>
 
           <DrawerPortal>
-            <DrawerOverlay className="fixed inset-0 bg-background/50 blur-xl" />
-            <DrawerContent
-              title="navigation menu"
-              className="fixed top-0 right-0 bottom-0 w-72 bg-background border-l border-border shadow-lg p-4 flex flex-col rounded-l-xl"
-            >
-              <DialogTitle className="mb-7 mt-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xl font-semibold font-poppins text-foreground">
-                    Navigations
-                  </span>
-                  <Button
-                    variant="ghost"
-                    className="self-center "
-                    onClick={() => setDrawerOpen(false)}
-                    aria-label="Close menu"
-                  >
-                    {/* Close icon */}
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </Button>
-                </div>
-              </DialogTitle>
-
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="flex flex-col gap-4 flex-grow"
-              >
-                <nav className="flex flex-col gap-4">
-                  {navLinks.map((link) => (
-                    <a
-                      key={link.href}
-                      href={link.href}
-                      className={cn(
-                        "px-4 py-2 rounded-md text-white font-semibold transition-colors hover:bg-white/20",
-                        active === link.label && "bg-primary"
-                      )}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setActive(link.label);
-                        setDrawerOpen(false);
-                      }}
-                    >
-                      {link.label}
-                    </a>
-                  ))}
+            <DrawerOverlay className="fixed inset-0 top-24 dark:bg-background/85 bg-background/87 blur-lg z-30" />
+            <DrawerContent className="border-none fixed mt-20 bg-transparent overflow-y-auto no-scrollbar p-4 z-50">
+              <div>
+                <nav>
+                  <ul className="relative flex flex-col gap-2 font-bold dark:text-foreground text-[#000000] z-50  text-2xl sm:text-4xl select-none items-start pl-9 sm:pl-20 ">
+                    <DialogTitle className="text-xs font-normal tracking-wider font-poppins my-2">
+                      Menu
+                    </DialogTitle>
+                    <li>
+                      <Link href="#" className="hover:underline">
+                        Snippets
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="#" className="hover:underline">
+                        Create
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="#" className="hover:underline">
+                        Category
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="#" className="hover:underline">
+                        tags
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="#" className="hover:underline">
+                        Settings
+                      </Link>
+                    </li>
+                    {/* Add other links in order here */}
+                  </ul>
                 </nav>
-                <Input
-                  type="search"
-                  placeholder="Search snippets..."
-                  className="rounded-md bg-primary border border-white/30 placeholder-white/70 text-white focus:outline-none focus:ring-2 focus:ring-white"
-                  aria-label="Search snippets"
-                />
-                <div className="mt-auto flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage
-                      src="/avatar-placeholder.png"
-                      alt="User avatar"
-                    />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                  <span className="text-white font-semibold">Your Account</span>
-                </div>
-              </motion.div>
+              </div>
             </DrawerContent>
           </DrawerPortal>
         </Drawer>
