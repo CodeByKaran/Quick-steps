@@ -9,7 +9,6 @@ import cookieParser from "cookie-parser";
 // routes imports
 import UserRoutes from "./routes/user.routes.ts";
 import SnippetsRoutes from "./routes/snippets.routes.ts";
-import UsefulRoutes from "./routes/useful.routes.ts";
 import COmmentRoutes from "./routes/comments.routes.ts";
 
 // Load environment variables
@@ -43,7 +42,6 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/users", UserRoutes);
 app.use("/api/snippets", SnippetsRoutes);
-app.use("/api/useful", UsefulRoutes);
 app.use("/api/comment", COmmentRoutes);
 
 // Start server

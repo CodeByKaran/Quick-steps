@@ -5,23 +5,10 @@ import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
 import { ErrorResponse } from "../utils/apiErrorResponse.ts";
 import z from "zod";
 import { snippetsTable } from "../models/snippets.model.ts";
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gt,
-  ilike,
-  inArray,
-  like,
-  lt,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, lt, or, sql } from "drizzle-orm";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { usersTable } from "../models/user.model.ts";
-import { ta } from "zod/locales";
 
 const sqlClient = neon(process.env.DATABASE_URL!);
 const db = drizzle({ client: sqlClient });

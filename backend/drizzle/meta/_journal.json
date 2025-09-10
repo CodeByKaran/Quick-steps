@@ -15,6 +15,20 @@
       "when": 1756718951552,
       "tag": "0001_add-tags-column",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757526394296,
+      "tag": "0002_popular_to_commet",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1757527724634,
+      "tag": "0003_add_columns_in_comment_model",
+      "breakpoints": true
     }
   ]
 }
