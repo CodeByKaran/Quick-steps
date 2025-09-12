@@ -5,8 +5,18 @@ import Link from "next/link";
 import { ModeToggle } from "./theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import SearchDialog from "./search-dialog";
+import { useRouter } from "next/navigation";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuTrigger,
+} from "./ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 export default function TabletDrawer() {
+  const router = useRouter();
+
   return (
     <Drawer.Root direction="right">
       <Drawer.Trigger
@@ -37,23 +47,48 @@ export default function TabletDrawer() {
                 {/* navigation div */}
                 <div className="my-6">
                   <nav className="pl-1">
-                    <ul className="flex flex-col gap-2 font-bold text-foreground text-2xl select-none">
-                      <li className="hover:underline">
-                        <Link href={"#"}>Snippets</Link>
-                      </li>
-                      <li className="hover:underline">
-                        <Link href={"#"}>Create</Link>
-                      </li>
-                      <li className="hover:underline">
-                        <Link href={"#"}>Tags</Link>
-                      </li>
-                      <li className="hover:underline">
-                        <Link href={"#"}>Cateagory</Link>
-                      </li>
-                      <li className="hover:underline">
-                        <Link href={"#"}>Settings</Link>
-                      </li>
-                    </ul>
+                    <NavigationMenu viewport={false} className="p-0">
+                      <ul className="flex flex-col gap-2 font-bold text-foreground text-2xl select-none">
+                        <Drawer.Close className="text-start" asChild>
+                          <li>
+                            <button
+                              className="hover:underline"
+                              onClick={() => router.push("/")}
+                            >
+                              Snippets
+                            </button>
+                          </li>
+                        </Drawer.Close>
+                        <Drawer.Close className="text-start" asChild>
+                          <li className="hover:underline">
+                            <button
+                              className="hover:underline"
+                              onClick={() => router.push("/create")}
+                            >
+                              Create
+                            </button>
+                          </li>
+                        </Drawer.Close>
+
+                        <NavigationMenuItem className="bg-transparent w-full px-0">
+                          <NavigationMenuTrigger className="px-0">
+                            <span
+                              className={cn(
+                                " cursor-pointer font-bold text-foreground text-2xl select-none z-10"
+                              )}
+                            >
+                              Cateagory
+                            </span>
+                          </NavigationMenuTrigger>
+                          <NavigationMenuContent
+                            className="border-2 border-border p-0 bg-transparent"
+                            color="none"
+                          >
+                            <div className="grid grid-cols-1 overflow-y-auto no-scrollbar w-[260px] h-[250px] max-h-[250px] bg-background gap-4 p-4 text-base"></div>
+                          </NavigationMenuContent>
+                        </NavigationMenuItem>
+                      </ul>
+                    </NavigationMenu>
                   </nav>
                 </div>
                 {/* footer div */}

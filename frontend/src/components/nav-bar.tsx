@@ -10,17 +10,22 @@ import Link from "next/link";
 import TabletDrawer from "./tablet-drawer";
 import { ModeToggle } from "./theme-toggle";
 import SearchDialog from "./search-dialog";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuTrigger,
+} from "./ui/navigation-menu";
 
 const navLinks = [
-  { label: "Snippets", href: "/snippets" },
+  { label: "Snippets", href: "/" },
   { label: "Create", href: "/create" },
-  { label: "Settings", href: "/settings" },
-  { label: "Category", href: "/category" },
-  { label: "Tags", href: "/tags" },
 ];
 
 export default function Navbar() {
-  const [active, setActive] = useState("Snippets");
+  // const [active, setActive] = useState("/");
+  const path = usePathname();
 
   const { scrollY, scrollYProgress } = useScroll();
   const [scrollDirection, setScrollDirection] = useState("down");
@@ -31,10 +36,8 @@ export default function Navbar() {
   });
 
   useEffect(() => {
-    console.log(
-      `Scroll direction: ${scrollDirection},\n Scroll Y Progress: ${scrollYProgress.get()}`
-    );
-  }, [scrollDirection, scrollYProgress]);
+    console.log(`path is : ${path}`);
+  }, [path]);
 
   return (
     <>
@@ -84,30 +87,48 @@ export default function Navbar() {
         </div>
 
         {/* Middle: Nav Links (hidden on mobile) */}
+
         <nav className="hidden xl:flex gap-3 justify-end ">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "relative px-3 py-1 font-semibold cursor-pointer rounded-md transition-colors hover:bg-white/20"
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                setActive(link.label);
-              }}
-            >
-              {/* Animate underline */}
-              <span className="relative z-10">{link.label}</span>
-              {active === link.label && (
-                <motion.span
-                  layoutId="underline"
-                  className="absolute left-0 -bottom-2 w-full h-1 bg-primary rounded-full"
-                  transition={{ type: "spring", stiffness: 120, damping: 20 }}
-                />
-              )}
-            </Link>
-          ))}
+          <NavigationMenu viewport={false}>
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={cn(
+                  "relative px-3 py-1 font-semibold cursor-pointer rounded-md transition-colors hover:bg-white/20"
+                )}
+              >
+                {/* Animate underline */}
+                <span className="relative z-10">{link.label}</span>
+                {(link.href !== "/"
+                  ? path.startsWith(link.href)
+                  : /^\/(\d+)?$/.test(path)) && ( // matches / and /anyNumber
+                  <motion.span
+                    layoutId="underline"
+                    className="absolute left-0 -bottom-2 w-full h-1 bg-primary rounded-full"
+                    transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                  />
+                )}
+              </Link>
+            ))}
+            <NavigationMenuItem className="bg-transparent">
+              <NavigationMenuTrigger className="bg-transparent">
+                <span
+                  className={cn(
+                    "relative px-3 py-1 font-semibold cursor-pointer z-10"
+                  )}
+                >
+                  Cateagory
+                </span>
+              </NavigationMenuTrigger>
+              <NavigationMenuContent
+                className="border-2 border-border p-0 bg-transparent"
+                color="none"
+              >
+                <div className=" overflow-y-auto no-scrollbar w-[260px] h-[250px] max-h-[250px] bg-background gap-2 pl-4 pr-2 py-4"></div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          </NavigationMenu>
         </nav>
 
         {/* Right side - Search and Avatar (hidden on mobile) */}

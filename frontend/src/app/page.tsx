@@ -1,10 +1,7 @@
-import Navbar from "@/components/nav-bar";
-import { ModeToggle } from "@/components/theme-toggle";
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-background px-4 py-8">
-      <main className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {/* Example Cards */}
         {[
           { title: "Button", description: "Primary and secondary buttons" },
@@ -36,7 +33,7 @@ export default function Home() {
             <p className="text-muted-foreground">{description}</p>
           </div>
         ))}
-      </main>
+      </div>
     </div>
   );
 }
