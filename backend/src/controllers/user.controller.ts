@@ -1,16 +1,16 @@
 import "dotenv/config";
 import { Request, Response } from "express";
-import { asyncHandler } from "../utils/asyncHandler.ts";
-import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
+import { asyncHandler } from "../utils/asyncHandler";
+import { SuccessResponse } from "../utils/apiSuccessResponse";
 import z from "zod";
-import { ErrorResponse } from "../utils/apiErrorResponse.ts";
-import { usersTable } from "../models/user.model.ts";
+import { ErrorResponse } from "../utils/apiErrorResponse";
+import { usersTable } from "../models/user.model";
 import bcrypt from "bcryptjs";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
-import { AuthRequest } from "../middlewares/authMiddleware.ts";
+import { AuthRequest } from "../middlewares/authMiddleware";
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle({ client: sql });
 

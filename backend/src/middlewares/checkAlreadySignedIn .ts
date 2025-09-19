@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
-import { ca } from "zod/locales";
-import { ErrorResponse } from "../utils/apiErrorResponse.ts";
+import { SuccessResponse } from "../utils/apiSuccessResponse";
+
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../controllers/user.controller.ts";
+} from "../controllers/user.controller";
 
 export const checkAlreadySignedIn = (
   req: Request,

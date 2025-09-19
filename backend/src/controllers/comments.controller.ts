@@ -1,18 +1,15 @@
 import { Response, Request } from "express";
-import { asyncHandler } from "../utils/asyncHandler.ts";
-import { ErrorResponse } from "../utils/apiErrorResponse.ts";
+import { asyncHandler } from "../utils/asyncHandler";
+import { ErrorResponse } from "../utils/apiErrorResponse";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { snippetsTable } from "../models/snippets.model.ts";
+import { snippetsTable } from "../models/snippets.model";
 import { and, asc, desc, eq, lt, or, gt, sql } from "drizzle-orm";
-import {
-  commentInsertionType,
-  commentsTable,
-} from "../models/comments.model.ts";
+import { commentInsertionType, commentsTable } from "../models/comments.model";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import z from "zod";
-import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
-import { usersTable } from "../models/user.model.ts";
+import { SuccessResponse } from "../utils/apiSuccessResponse";
+import { usersTable } from "../models/user.model";
 
 const sqlClient = neon(process.env.DATABASE_URL!);
 const db = drizzle({ client: sqlClient });

@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { AuthMiddleware } from "../middlewares/authMiddleware.ts";
+import { AuthMiddleware } from "../middlewares/authMiddleware";
 import {
   paginateComments,
   postComments,
-} from "../controllers/comments.controller.ts";
+} from "../controllers/comments.controller";
 
 const router = Router();
 

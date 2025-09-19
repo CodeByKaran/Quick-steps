@@ -1,14 +1,14 @@
 import { Response, Request } from "express";
-import { AuthRequest } from "../middlewares/authMiddleware.ts"; // Your extended Request type
-import { asyncHandler } from "../utils/asyncHandler.ts";
-import { SuccessResponse } from "../utils/apiSuccessResponse.ts";
-import { ErrorResponse } from "../utils/apiErrorResponse.ts";
+import { AuthRequest } from "../middlewares/authMiddleware"; // Your extended Request type
+import { asyncHandler } from "../utils/asyncHandler";
+import { SuccessResponse } from "../utils/apiSuccessResponse";
+import { ErrorResponse } from "../utils/apiErrorResponse";
 import z from "zod";
-import { snippetsTable } from "../models/snippets.model.ts";
+import { snippetsTable } from "../models/snippets.model";
 import { and, asc, desc, eq, gt, ilike, lt, or, sql } from "drizzle-orm";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { usersTable } from "../models/user.model.ts";
+import { usersTable } from "../models/user.model";
 
 const sqlClient = neon(process.env.DATABASE_URL!);
 const db = drizzle({ client: sqlClient });
@@ -363,6 +363,8 @@ export const paginateRandomSnippets = asyncHandler(
   async (req: Request, res: Response) => {
     const { limit, cursorId, cursorKey, orderby } = req.query;
 
+    console.log(`called paginations`);
+
     const limitNum = limit ? parseInt(limit as string) : 10;
     const cursorIdNum = cursorId ? parseInt(cursorId as string) : undefined;
     const cursorKeyStr = cursorKey && cursorKey.toString();
@@ -381,9 +383,12 @@ export const paginateRandomSnippets = asyncHandler(
         snippetTitle: snippetsTable.title,
         snippetDescription: snippetsTable.description,
         trimmedSnippetMarkdownContent: sql`substring(${snippetsTable.markdown}, 1, 200)`,
+        tags: snippetsTable.tags,
         userId: snippetsTable.userId,
         username: usersTable.username,
         userAvatar: usersTable.avatarUrl,
+        createdAt: snippetsTable.createdAt,
+        updatedAt: snippetsTable.updatedAt,
       })
       .from(snippetsTable)
       .leftJoin(usersTable, eq(snippetsTable.userId, usersTable.id))
@@ -429,6 +434,8 @@ export const paginateRandomSnippets = asyncHandler(
       hasNextPage,
       limit: limitNum,
     };
+
+    console.log("response data is : " + JSON.stringify(responseData, null, 2));
 
     return res
       .status(200)

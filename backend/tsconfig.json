@@ -10,8 +10,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "rewriteRelativeImportExtensions": false,
-    "noEmit": true,
-    "allowImportingTsExtensions": true
   },
   "include": ["src"]
 }

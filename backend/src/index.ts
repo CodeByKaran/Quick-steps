@@ -7,9 +7,9 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 
 // routes imports
-import UserRoutes from "./routes/user.routes.ts";
-import SnippetsRoutes from "./routes/snippets.routes.ts";
-import COmmentRoutes from "./routes/comments.routes.ts";
+import UserRoutes from "./routes/user.routes";
+import SnippetsRoutes from "./routes/snippets.routes";
+import COmmentRoutes from "./routes/comments.routes";
 
 // Load environment variables
 

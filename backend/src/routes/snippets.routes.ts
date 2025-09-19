@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { AuthMiddleware } from "../middlewares/authMiddleware.ts";
+import { AuthMiddleware } from "../middlewares/authMiddleware";
 import {
   createSnippet,
   updateSnippet,
@@ -10,7 +10,7 @@ import {
   paginateMySnippets,
   paginateSnippetsByTags,
   searchSnippets, // Add this import
-} from "../controllers/snippets.controller.ts";
+} from "../controllers/snippets.controller";
 
 const router = Router();
 

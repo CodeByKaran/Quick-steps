@@ -5,7 +5,7 @@ import {
   index,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { usersTable } from "./user.model.ts";
+import { usersTable } from "./user.model";
 
 export const snippetsTable = pgTable(
   "snippets",

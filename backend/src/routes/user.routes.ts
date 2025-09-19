@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { AuthMiddleware } from "../middlewares/authMiddleware.ts";
+import { AuthMiddleware } from "../middlewares/authMiddleware";
 import {
   userSignout,
   userSignin,
   userSignup,
   userDeletAccount,
-} from "../controllers/user.controller.ts";
-import { checkAlreadySignedIn } from "../middlewares/checkAlreadySignedIn .ts";
+} from "../controllers/user.controller";
+import { checkAlreadySignedIn } from "../middlewares/checkAlreadySignedIn ";
 
 const router = Router();
 
