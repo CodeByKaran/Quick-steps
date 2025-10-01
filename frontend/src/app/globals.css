@@ -57,6 +57,7 @@
   --spacing: 0.25rem;
 }
 
+/* normal dark */
 .dark {
   --background: oklch(14.479% 0.00002 271.152);
   --foreground: oklch(0.985 0 0);
@@ -184,4 +185,133 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+}
+
+/* Container general text and background */
+/* Container general text and background */
+.wmde-markdown {
+  color: var(--color-foreground) !important;
+  background-color: var(--color-background) !important;
+  font-family: var(--font-poppins) !important;
+  line-height: 1.6 !important;
+  font-size: 1rem !important;
+  letter-spacing: var(--tracking-normal) !important;
+}
+/* Headings - subtle colors, spacing */
+.wmde-markdown h1,
+.wmde-markdown h2,
+.wmde-markdown h3,
+.wmde-markdown h4,
+.wmde-markdown h5,
+.wmde-markdown h6 {
+  color: var(--color-primary) !important;
+  margin-top: 1.4em !important;
+  margin-bottom: 0.6em !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: var(--color-foreground) !important;
+}
+/* Paragraphs */
+.wmde-markdown p {
+  margin-bottom: 1em !important;
+}
+/* Links */
+.wmde-markdown a {
+  color: var(--color-foreground) !important;
+  text-decoration: underline !important;
+  transition: color 0.2s ease-in-out !important;
+}
+.wmde-markdown a:hover,
+.wmde-markdown a:focus {
+  color: var(--color-primary) !important;
+  outline: none !important;
+}
+/* Blockquotes - subtle background with border on left */
+.wmde-markdown blockquote {
+  border-left: 3px solid var(--color-muted) !important;
+  background-color: var(--color-background) !important;
+  color: var(--color-foreground) !important;
+  padding: 0.75em 1em !important;
+  margin: 1em 0 !important;
+  font-style: italic !important;
+  border-radius: var(--radius-sm) !important;
+}
+/* Lists */
+.wmde-markdown ul,
+.wmde-markdown ol {
+  margin: 1em 0 1em 1.5em !important;
+  padding-left: 0 !important;
+  list-style: decimal !important;
+}
+.wmde-markdown li {
+  margin-bottom: 0.4em !important;
+}
+/* Tables - simple borders and spacing */
+.wmde-markdown table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 1.5em 0 !important;
+  font-size: 0.9rem !important;
+}
+.wmde-markdown th,
+.wmde-markdown td {
+  border: 1px solid var(--color-border) !important;
+  padding: 8px 12px !important;
+  text-align: left !important;
+  background-color: var(--color-background) !important;
+  color: var(--color-foreground) !important;
+}
+.wmde-markdown th {
+  background-color: var(--color-background) !important;
+  color: var(--color-foreground) !important;
+}
+/* Horizontal Rule */
+.wmde-markdown hr {
+  border: none !important;
+  border-top: 1px solid var(--color-border) !important;
+  margin: 2em 0 !important;
+}
+/* Inline Code */
+.wmde-markdown code {
+  background: var(--color-background) !important;
+  color: var(--color-foreground) !important;
+  padding: 2px 6px !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.95em !important;
+}
+/* Code Blocks */
+.wmde-markdown pre {
+  background: var(--color-background) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-foreground) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 16px !important;
+  overflow-x: auto !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.9em !important;
+  line-height: 1.4 !important;
+  box-shadow: var(--shadow-sm) !important;
+  margin: 1.5em 0 !important;
+}
+/* Task Lists */
+.wmde-markdown input[type="checkbox"] {
+  width: 1em !important;
+  height: 1em !important;
+  margin-right: 0.5em !important;
+  vertical-align: middle !important;
+  accent-color: var(--color-primary) !important;
+  background-color: var(--color-background) !important;
+  color: var(--color-foreground) !important;
+}
+/* Images */
+.wmde-markdown img {
+  max-width: 100% !important;
+  border-radius: var(--radius-md) !important;
+  margin: 1em 0 !important;
+  display: block !important;
+}
+/* Misc spacing adjustments */
+.wmde-markdown pre code {
+  background: transparent;
 }

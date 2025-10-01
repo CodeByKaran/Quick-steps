@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/nav-bar";
+import ClientProvider from "@/context/QueryClient";
+import NavBarWrapper from "@/components/navbar-wrapper";
 
 const poppins = Poppins({
   weight: ["400", "500", "700"],
@@ -32,8 +34,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          <main className="max-w-7xl mx-auto">{children}</main>
+          <ClientProvider>
+            <NavBarWrapper />
+
+            <main className="">{children}</main>
+          </ClientProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -107,3 +107,155 @@ export const users: { [key: number]: string } = {
   4: "Dana",
   5: "Eve",
 };
+
+export const sampleData = [
+  {
+    id: 1,
+    title: "Next.js Font Setting",
+    description:
+      "Font technique to optimize loading of fonts in Next.js applications for better performance and user experience.",
+    markdown: "h1 hello how are you",
+    tags: ["nextjs", "fonts", "performance", "optimization"],
+    createdAt: "2025-09-01T10:34:08.277498+00:00",
+    updatedAt: "2025-09-01T10:34:08.277498+00:00",
+  },
+  {
+    id: 2,
+    title: "React Server Components",
+    description:
+      "Understanding the new paradigm of server components in React and how they improve application performance.",
+    tags: ["react", "server-components", "performance"],
+    createdAt: "2025-09-02T14:22:15.123456+00:00",
+    updatedAt: "2025-09-02T16:45:30.987654+00:00",
+  },
+  {
+    id: 3,
+    title: "TypeScript Best Practices",
+    description:
+      "Essential TypeScript patterns and practices for building maintainable and type-safe applications.",
+    tags: ["typescript", "best-practices", "development"],
+    createdAt: "2025-09-03T09:15:42.456789+00:00",
+    updatedAt: "2025-09-03T09:15:42.456789+00:00",
+  },
+];
+
+export const source = `# MarkdownPreview
+
+
+> todo: React component preview markdown text.
+
+
+---
+
+
+## Headings
+
+
+# H1 Heading  
+## H2 Heading  
+### H3 Heading  
+#### H4 Heading  
+##### H5 Heading  
+###### H6 Heading  
+
+
+---
+
+
+## Text Formatting
+
+
+**Bold text**  
+*Italic text*  
+***Bold and italic***  
+~~Strikethrough~~
+
+
+---
+
+
+## Lists
+
+
+- Unordered list item 1
+- Unordered list item 2
+  - Nested unordered item
+- Unordered list item 3
+
+
+1. Ordered list item 1
+2. Ordered list item 2
+   1. Nested ordered item
+   2. Nested ordered item
+3. Ordered list item 3
+
+
+---
+
+
+## Links and Images
+
+
+[Google](https://google.com)
+
+
+![React Logo](https://reactjs.org/logo-og.png)
+
+
+---
+
+
+## Blockquotes
+
+
+> This is a blockquote.
+> 
+> It can span multiple lines.
+
+
+---
+
+
+## Code
+
+
+Inline code: \`const x = 5;\`
+
+
+\`\`\`javascript
+// Code block with syntax highlighting
+function greet(name) {
+  console.log(\`Hello, \${name}!\`);
+}
+greet('World');
+\`\`\`
+
+
+---
+
+
+## Tables
+
+
+| Syntax    | Description |
+| --------- | ----------- |
+| Header    | Title       |
+| Paragraph | Text        |
+
+
+---
+
+
+## Horizontal Rule
+
+
+---
+
+
+## Task List
+
+
+- [x] Write the code
+- [ ] Test the component
+- [ ] Deploy to production
+`;

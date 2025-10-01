@@ -17,6 +17,7 @@ import {
   NavigationMenuItem,
   NavigationMenuTrigger,
 } from "./ui/navigation-menu";
+import useLogger from "@/hooks/useLogger";
 
 const navLinks = [
   { label: "Snippets", href: "/" },
@@ -34,6 +35,8 @@ export default function Navbar() {
     const diff = current - scrollY.getPrevious()!;
     setScrollDirection(diff > 0 ? "down" : "up");
   });
+
+  useLogger(`scroll direction: ${scrollDirection}`, [scrollDirection]);
 
   useEffect(() => {
     console.log(`path is : ${path}`);
@@ -111,11 +114,11 @@ export default function Navbar() {
                 )}
               </Link>
             ))}
-            <NavigationMenuItem className="bg-transparent">
+            <NavigationMenuItem className="bg-transparent list-none">
               <NavigationMenuTrigger className="bg-transparent">
                 <span
                   className={cn(
-                    "relative px-3 py-1 font-semibold cursor-pointer z-10"
+                    "relative px-2 py-1 font-semibold cursor-pointer z-10"
                   )}
                 >
                   Cateagory
