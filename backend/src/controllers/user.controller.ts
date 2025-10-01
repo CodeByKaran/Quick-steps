@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { SuccessResponse } from "../utils/apiSuccessResponse";

@@ -1,10 +1,10 @@
-import dotenv from "dotenv";
-dotenv.config();
-
+import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+
+console.log(process.env.NODE_ENV);
 
 // routes imports
 import UserRoutes from "./routes/user.routes";
