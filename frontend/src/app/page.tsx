@@ -2,27 +2,24 @@
 import { ContentCard } from "@/components/snippetCards";
 import { fetchFeedSnipets } from "@/functions/snippetsFunction";
 import useLogger from "@/hooks/useLogger";
-import { sampleData } from "@/lib/data";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
-interface cursorType {
-  cursorId: number;
-  cursorKey: string;
+interface Snippet {
+  snippetId: number;
+  snippetTitle: string;
+  snippetDescription: string;
+  markdown?: string;
+  tags?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function Home() {
-  const {
-    data,
-    isLoading,
-    error,
-    isPending,
-    isError,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
     queryKey: ["randomsnippets"],
     queryFn: ({ pageParam: cursor }) =>
       cursor ? fetchFeedSnipets(cursor) : fetchFeedSnipets(),
@@ -59,8 +56,7 @@ export default function Home() {
     <div className="min-h-screen bg-background px-4 py-8">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {data?.pages.map((page) =>
-          //@ts-ignore
-          page.data.data.snippets.map((item) => (
+          page.data.data.snippets.map((item: Snippet) => (
             <ContentCard key={item.snippetId} {...item} />
           ))
         )}

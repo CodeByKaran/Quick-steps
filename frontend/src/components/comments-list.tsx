@@ -10,6 +10,13 @@ interface CommentsListProps {
   snippetId: number;
 }
 
+interface Comment {
+  id: number;
+  comment: string;
+  username: string;
+  userAvatar: string;
+}
+
 const CommentsList = (props: CommentsListProps) => {
   const { data, isLoading, error, isError, fetchNextPage, hasNextPage } =
     useInfiniteQuery({
@@ -51,8 +58,7 @@ const CommentsList = (props: CommentsListProps) => {
     <div className="p-4">
       <div className="flex flex-col  gap-y-4">
         {data?.pages.map((page) =>
-          //@ts-ignore
-          page.data.data.comments.map((item) => (
+          page.data.data.comments.map((item: Comment) => (
             <CommentBox key={item.id} {...item} />
           ))
         )}

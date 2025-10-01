@@ -9,7 +9,6 @@ import { SnippetHeader } from "@/components/snippet-header";
 import { motion } from "framer-motion";
 import MarkDownViewer from "@/components/markdow-viewer";
 import { Loader } from "lucide-react";
-import CommentBox from "@/components/comment-box";
 import CommentsList from "@/components/comments-list";
 import CommentHeader from "@/components/comment-header";
 import PostCommentBox from "@/components/post-comment-box";
@@ -58,7 +57,7 @@ export default function SnippetPage({
                 Snippet not found
               </h1>
               <p className="text-muted-foreground">
-                The snippet you're looking for doesn't exist.
+                The snippet you&apos;re looking for doesn&apos;t exist.
               </p>
             </div>
           </motion.div>
