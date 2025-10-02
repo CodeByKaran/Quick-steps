@@ -48,8 +48,8 @@ const CommentsList = (props: CommentsListProps) => {
 
   if (!data || data.pages[0].data.data.comments.length === 0) {
     return (
-      <div className="w-full h-full flex items-center justify-center text-muted-foreground p-4 text-center">
-        No comments yet. Be the first to comment! 🔕
+      <div className="w-full h-full flex items-center justify-center text-muted-foreground p-4 text-center font-poppins font-medium">
+        No comments yet. <br /> Be the first to comment !
       </div>
     );
   }

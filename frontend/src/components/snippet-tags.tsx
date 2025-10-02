@@ -15,7 +15,7 @@ export function SnippetTags({ tags }: SnippetTagsProps) {
 
   return (
     <motion.div
-      className="flex flex-wrap gap-2"
+      className="flex flex-wrap gap-x-2 "
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.3 }}
@@ -26,6 +26,7 @@ export function SnippetTags({ tags }: SnippetTagsProps) {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.2, delay: 0.4 + index * 0.1 }}
+          className="mb-4"
         >
           <Badge
             variant="secondary"

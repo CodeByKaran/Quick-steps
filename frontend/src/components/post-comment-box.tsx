@@ -68,11 +68,11 @@ const PostCommentBox = (props: PostCommentBoxProps) => {
   };
 
   return (
-    <div className="p-4 flex flex-col gap-y-2 bg-background sticky bottom-0 left-0 rounded-t-lg border-t border-border shadow-[0px_-12px_16px_-8px_rgba(0,0,0,0.1)] max-h-fit">
+    <div className="p-4 flex flex-col gap-y-2 bg-background sticky bottom-0 left-0  max-h-fit">
       {/* Error Message Display */}
       {errorMessage && (
         <div className="flex justify-between items-center px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-red-600 dark:text-red-400 font-poppins">
             {errorMessage}
           </p>
           <X
@@ -88,7 +88,7 @@ const PostCommentBox = (props: PostCommentBoxProps) => {
           <textarea
             ref={commentRef}
             placeholder="any comments you'd like .."
-            className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-16 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none"
+            className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-16 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none font-poppins focus-within:ring-offset-1 dark:ring-offset-0 focus-within:ring-2 focus-within:ring-primary "
             disabled={isPending}
           />
         </div>

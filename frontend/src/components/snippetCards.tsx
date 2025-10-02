@@ -51,16 +51,16 @@ export function ContentCard({
       {/* Subtle texture overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-accent/[0.01] pointer-events-none sm:block hidden" />
 
-      <CardHeader className="relative pb-3">
+      <CardHeader className="relative ">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="font-sans font-semibold text-xl text-primary leading-tight text-balance group-hover:text-primary/90 transition-colors">
+          <h3 className="font-medium text-xl text-primary leading-tight text-balance group-hover:text-primary/90 transition-colors font-poppins">
             {snippetTitle}
           </h3>
         </div>
       </CardHeader>
 
       <CardContent className="relative space-y-4">
-        <p className="text-card-foreground/80 leading-relaxed text-pretty">
+        <p className="text-card-foreground/80 leading-relaxed text-pretty font-poppins text-sm">
           {snippetDescription}
         </p>
 
@@ -70,7 +70,7 @@ export function ContentCard({
               <Badge
                 key={index}
                 variant="secondary"
-                className="bg-muted/70 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors text-xs"
+                className="bg-muted/70 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors text-xs font-poppins"
               >
                 {tag}
               </Badge>

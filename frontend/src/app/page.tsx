@@ -19,7 +19,7 @@ interface Snippet {
 }
 
 export default function Home() {
-  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["randomsnippets"],
     queryFn: ({ pageParam: cursor }) =>
       cursor ? fetchFeedSnipets(cursor) : fetchFeedSnipets(),
@@ -44,13 +44,13 @@ export default function Home() {
     }
   }, [inView, hasNextPage, fetchNextPage]);
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="w-screen h-screen fixed flex items-center justify-center">
-  //       <Loader size={36} className="animate-spin text-primary" />
-  //     </div>
-  //   );
-  // }
+  if (isLoading) {
+    return (
+      <div className="w-screen h-screen fixed flex items-center justify-center">
+        <Loader size={36} className="animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background px-4 py-8">

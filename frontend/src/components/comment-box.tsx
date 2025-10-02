@@ -22,7 +22,7 @@ const CommentBox = (props: CommentBoxProps) => {
           </p>
         </div>
         <div className="">
-          <p className="text-sm font-normal font-sans">{props.comment}</p>
+          <p className="text-sm font-normal font-poppins">{props.comment}</p>
         </div>
       </div>
     </div>
