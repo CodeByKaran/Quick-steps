@@ -15,7 +15,7 @@ const fetchFeedSnipets = async (cursor?: {
     }
     const res = await axios.get(url);
 
-    console.log("response data is : " + JSON.stringify(res, null, 2));
+    // console.log("response data is : " + JSON.stringify(res, null, 2));
 
     return res;
   } catch (error) {

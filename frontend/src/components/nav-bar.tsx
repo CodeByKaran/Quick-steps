@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -10,7 +10,7 @@ import Link from "next/link";
 import TabletDrawer from "./tablet-drawer";
 import { ModeToggle } from "./theme-toggle";
 import SearchDialog from "./search-dialog";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -18,6 +18,9 @@ import {
   NavigationMenuTrigger,
 } from "./ui/navigation-menu";
 import useLogger from "@/hooks/useLogger";
+import { useQuery } from "@tanstack/react-query";
+import { checkSession } from "@/functions/userFunctions";
+import { Button } from "./ui/button";
 
 const navLinks = [
   { label: "Snippets", href: "/" },
@@ -25,22 +28,32 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  const {
+    data: sessionData,
+    isLoading: sessionLoading,
+    error: sessionError,
+  } = useQuery({
+    queryKey: ["user-session-check"],
+    queryFn: async () => checkSession(),
+    // 5 minutes
+  });
   // const [active, setActive] = useState("/");
   const path = usePathname();
+  useLogger("session data in nav bar:" + JSON.stringify(sessionData?.data), [
+    sessionData,
+  ]);
 
-  const { scrollY, scrollYProgress } = useScroll();
+  useLogger("session error in nav bar:" + JSON.stringify(sessionError), [
+    sessionError,
+  ]);
+
+  const { scrollY } = useScroll();
   const [scrollDirection, setScrollDirection] = useState("down");
 
   useMotionValueEvent(scrollY, "change", (current) => {
     const diff = current - scrollY.getPrevious()!;
     setScrollDirection(diff > 0 ? "down" : "up");
   });
-
-  useLogger(`scroll direction: ${scrollDirection}`, [scrollDirection]);
-
-  useEffect(() => {
-    console.log(`path is : ${path}`);
-  }, [path]);
 
   return (
     <>
@@ -143,13 +156,20 @@ export default function Navbar() {
           <span className="md:block hidden">
             <ModeToggle />
           </span>
-
-          <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300 cursor-default md:block hidden">
-            <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
-            <AvatarFallback className="bg-primary text-white dark:text-black">
-              U
-            </AvatarFallback>
-          </Avatar>
+          {sessionData ? (
+            <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300 cursor-default md:block hidden">
+              <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
+              <AvatarFallback className="bg-primary text-white dark:text-black">
+                {sessionData.data.user.username}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <Link href="/sign-in">
+              <Button className="px-4 py-1.5 bg-primary rounded-md hover:bg-primary/90 transition-colors text-sm md:block hidden">
+                Signin
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile menu button (visible only on mobile) */}

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import Navbar from "@/components/nav-bar";
 import ClientProvider from "@/context/QueryClient";
 import NavBarWrapper from "@/components/navbar-wrapper";
 

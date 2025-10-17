@@ -40,7 +40,10 @@ export function ContentCard({
   const Arraytags = tags ? tags.split(",") : [];
 
   const handleRouteForward = () => {
-    router.push(`/${snippetId}`);
+    console.log("Routing to snippet:", snippetId);
+
+    router.push(`/${snippetId}`, {});
+    console.log("Routed to snippet:", snippetId);
   };
 
   return (
