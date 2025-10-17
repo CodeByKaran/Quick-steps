@@ -20,7 +20,23 @@ const port = process.env.PORT! || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://your-production-domain.com",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // IMPORTANT: enable cookies with CORS
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
