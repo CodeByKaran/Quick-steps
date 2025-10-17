@@ -160,7 +160,7 @@ export default function Navbar() {
             <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300 cursor-default md:block hidden">
               <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
               <AvatarFallback className="bg-primary text-white dark:text-black">
-                {sessionData.data.user.username}
+                {sessionData.data?.user?.username?.charAt(0)?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           ) : (
