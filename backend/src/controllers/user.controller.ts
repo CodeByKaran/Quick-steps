@@ -154,6 +154,8 @@ export const userSignin = asyncHandler(async (req: Request, res: Response) => {
     email: existingUser.email,
   };
 
+  console.log("is secure", process.env.NODE_ENV === "production");
+
   // Create tokens
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
@@ -305,7 +307,10 @@ export const isUserSignedIn = (
 ) => {
   const token = req.cookies?.accessToken;
 
+  console.log("is secure", process.env.NODE_ENV === "production");
   if (!token) {
+    console.log("no token found in cookies");
+
     return res.status(401).json({ success: false, message: "Not signed in" });
   }
 

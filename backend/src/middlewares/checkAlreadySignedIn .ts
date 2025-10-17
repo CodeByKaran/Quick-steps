@@ -7,6 +7,7 @@ import {
   setAccessCookie,
   setRefreshCookie,
 } from "../controllers/user.controller";
+import { log } from "console";
 
 // Optionally, use a persistent store for refresh tokens:
 // import { saveRefreshToken, isValidRefreshToken, revokeRefreshToken } from "../utils/tokenStore";
@@ -18,6 +19,10 @@ export const checkAlreadySignedIn = async (
 ) => {
   const accessToken = req.cookies?.accessToken;
   const refreshToken = req.cookies?.refreshToken;
+  console.log("is secure", process.env.NODE_ENV === "production");
+
+  console.log("Checking already signed in with tokens:", accessToken);
+  console.log("and refresh token:", refreshToken);
 
   // Helper to send success response
   const sendSignInResponse = (
