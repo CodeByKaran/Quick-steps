@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { SuccessResponse } from "../utils/apiSuccessResponse";
-import z from "zod";
+import z, { set } from "zod";
 import { ErrorResponse } from "../utils/apiErrorResponse";
 import { usersTable } from "../models/user.model";
 import bcrypt from "bcryptjs";
@@ -41,6 +41,24 @@ export const generateAccessToken = (payload: object) =>
 
 export const generateRefreshToken = (payload: object) =>
   jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d" });
+
+export const setAccessCookie = (res: Response, token: string) => {
+  res.cookie("accessToken", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "none",
+    maxAge: 60 * 60 * 1000, // 60 minutes
+  });
+};
+
+export const setRefreshCookie = (res: Response, token: string) => {
+  res.cookie("refreshToken", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "none",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+};
 
 // User Signup controller
 export const userSignup = asyncHandler(async (req: Request, res: Response) => {
@@ -141,20 +159,23 @@ export const userSignin = asyncHandler(async (req: Request, res: Response) => {
   const refreshToken = generateRefreshToken(payload);
 
   // Set access token cookie (short-lived)
-  res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 60 * 60 * 1000, // 60 minutes
-  });
+  // res.cookie("accessToken", accessToken, {
+  //   httpOnly: true,
+  //   secure: process.env.NODE_ENV === "production",
+  //   sameSite: "none",
+  //   maxAge: 60 * 60 * 1000, // 60 minutes
+  // });
+
+  setAccessCookie(res, accessToken);
+  setRefreshCookie(res, refreshToken);
 
   // Set refresh token cookie (longer-lived)
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
+  // res.cookie("refreshToken", refreshToken, {
+  //   httpOnly: true,
+  //   secure: process.env.NODE_ENV === "production",
+  //   sameSite: "none",
+  //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  // });
 
   res.status(200).json(
     new SuccessResponse("User signed in successfully", {
@@ -291,7 +312,6 @@ export const isUserSignedIn = (
   try {
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
     // If needed, attach user info to request object
-    (req as any).user = decoded;
     return res
       .status(200)
       .json({ success: true, message: "User is signed in", user: decoded });

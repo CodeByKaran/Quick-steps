@@ -4,6 +4,8 @@ import { SuccessResponse } from "../utils/apiSuccessResponse";
 import {
   generateAccessToken,
   generateRefreshToken,
+  setAccessCookie,
+  setRefreshCookie,
 } from "../controllers/user.controller";
 
 // Optionally, use a persistent store for refresh tokens:
@@ -24,19 +26,8 @@ export const checkAlreadySignedIn = async (
     refreshToken: string
   ) => {
     // Set access token cookie
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 1000, // 60 minutes
-    });
-    // Set refresh token cookie
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    setAccessCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
     return res.status(200).json(
       new SuccessResponse("User session validated", {
         user,

@@ -22,7 +22,7 @@ const port = process.env.PORT! || 3001;
 app.use(helmet());
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://your-production-domain.com",
+  "https://quick-steps-rho.vercel.app",
 ];
 
 app.use(
