@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { SuccessResponse } from "../utils/apiSuccessResponse";
 import z from "zod";
@@ -276,3 +276,28 @@ export const refreshAccessToken = asyncHandler(
     }
   }
 );
+
+export const isUserSignedIn = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.cookies?.accessToken;
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Not signed in" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
+    // If needed, attach user info to request object
+    (req as any).user = decoded;
+    return res
+      .status(200)
+      .json({ success: true, message: "User is signed in", user: decoded });
+  } catch (err) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid or expired token" });
+  }
+};

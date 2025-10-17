@@ -1,145 +1,127 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { SuccessResponse } from "../utils/apiSuccessResponse";
-
 import {
   generateAccessToken,
   generateRefreshToken,
 } from "../controllers/user.controller";
 
-export const checkAlreadySignedIn = (
+// Optionally, use a persistent store for refresh tokens:
+// import { saveRefreshToken, isValidRefreshToken, revokeRefreshToken } from "../utils/tokenStore";
+
+export const checkAlreadySignedIn = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.cookies?.accessToken;
+  const accessToken = req.cookies?.accessToken;
+  const refreshToken = req.cookies?.refreshToken;
 
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
-      // User already signed in
-      return res.status(200).json(
-        new SuccessResponse("User already signed in", {
-          user: decoded,
-          tokens: { accessToken: token },
-        })
-      );
-    } catch (err: unknown) {
-      if (err instanceof jwt.TokenExpiredError) {
-        const refreshToken = req.cookies?.refreshToken;
+  // Helper to send success response
+  const sendSignInResponse = (
+    user: any,
+    accessToken: string,
+    refreshToken: string
+  ) => {
+    // Set access token cookie
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 60 minutes
+    });
+    // Set refresh token cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    return res.status(200).json(
+      new SuccessResponse("User session validated", {
+        user,
+        tokens: { accessToken },
+      })
+    );
+  };
 
-        if (refreshToken) {
+  try {
+    if (accessToken) {
+      try {
+        const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET!);
+        return sendSignInResponse(decoded, accessToken, refreshToken);
+      } catch (err: any) {
+        // If access token expired, try refresh token
+        if (err instanceof jwt.TokenExpiredError && refreshToken) {
           try {
-            interface UserPayload {
-              id: string;
-              username: string;
-              email: string;
-            }
             const jwtPayload = jwt.verify(
               refreshToken,
               process.env.JWT_REFRESH_SECRET!
-            ) as UserPayload;
+            ) as any;
 
-            if (!jwtPayload?.id) {
-              next();
-            }
-
+            // Refresh token rotation recommended:
             const newAccessToken = generateAccessToken({
               id: jwtPayload.id,
               username: jwtPayload.username,
               email: jwtPayload.email,
             });
-
-            const newRefresToken = generateRefreshToken({
+            const newRefreshToken = generateRefreshToken({
               id: jwtPayload.id,
               username: jwtPayload.username,
               email: jwtPayload.email,
             });
 
-            res.cookie("accessToken", newAccessToken, {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "strict",
-              maxAge: 60 * 60 * 1000, // 60 minutes
-            });
+            // Optionally, persist newRefreshToken and revoke old one here
+            // await saveRefreshToken(jwtPayload.id, newRefreshToken);
+            // await revokeRefreshToken(refreshToken);
 
-            // Set refresh token cookie (longer-lived)
-            res.cookie("refreshToken", newRefresToken, {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "strict",
-              maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            });
-
-            return res.status(200).json(
-              new SuccessResponse("User signed in using refresh token ", {
-                user: {
-                  id: jwtPayload.id,
-                  username: jwtPayload.username,
-                  email: jwtPayload.email,
-                },
-                tokens: { accessToken: newAccessToken },
-              })
+            return sendSignInResponse(
+              jwtPayload,
+              newAccessToken,
+              newRefreshToken
             );
-          } catch (error) {
-            throw new Error(`Error verifying refresh token ${error}`);
+          } catch (refreshErr) {
+            // Invalid refresh token, pass to next (user not authenticated)
+            return next();
           }
-        } else {
-          next();
         }
+        // Other errors, pass to next
+        return next();
       }
-      next();
-    }
-  } else {
-    const refreshToken = req.cookies?.refreshToken;
-
-    if (refreshToken) {
+    } else if (refreshToken) {
+      // No accessToken, but refreshToken present
       try {
         const jwtPayload = jwt.verify(
           refreshToken,
           process.env.JWT_REFRESH_SECRET!
-        ) as {
-          id: string;
-          username: string;
-          email: string;
-        };
+        ) as any;
 
-        if (!jwtPayload?.id) {
-          next();
-        }
-
-        const newAccessToken = jwt.sign(
-          {
-            id: jwtPayload.id,
-            username: jwtPayload.username,
-            email: jwtPayload.email,
-          },
-          process.env.JWT_ACCESS_SECRET!,
-          { expiresIn: "1h" }
-        );
-
-        res.cookie("accessToken", newAccessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-          maxAge: 60 * 60 * 1000, // 15 minutes
+        const newAccessToken = generateAccessToken({
+          id: jwtPayload.id,
+          username: jwtPayload.username,
+          email: jwtPayload.email,
+        });
+        const newRefreshToken = generateRefreshToken({
+          id: jwtPayload.id,
+          username: jwtPayload.username,
+          email: jwtPayload.email,
         });
 
-        return res.status(200).json(
-          new SuccessResponse("User signed in using refresh token ", {
-            user: {
-              id: jwtPayload.id,
-              username: jwtPayload.username,
-              email: jwtPayload.email,
-            },
-            tokens: { accessToken: newAccessToken },
-          })
-        );
-      } catch (error) {
-        throw new Error(`Error verifying refresh token ${error}`);
+        // Optionally, persist newRefreshToken and revoke old one
+        // await saveRefreshToken(jwtPayload.id, newRefreshToken);
+        // await revokeRefreshToken(refreshToken);
+
+        return sendSignInResponse(jwtPayload, newAccessToken, newRefreshToken);
+      } catch (err) {
+        // Invalid refresh token, pass to next (user not authenticated)
+        return next();
       }
     } else {
-      next();
+      // Neither token present, pass to next
+      return next();
     }
+  } catch (error) {
+    // Forward caught error to error-handling middleware
+    return next(error);
   }
 };

@@ -10,6 +10,7 @@ console.log(process.env.NODE_ENV);
 import UserRoutes from "./routes/user.routes";
 import SnippetsRoutes from "./routes/snippets.routes";
 import COmmentRoutes from "./routes/comments.routes";
+import { errorHandler } from "./middlewares/errorHandler";
 
 // Load environment variables
 
@@ -43,6 +44,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/users", UserRoutes);
 app.use("/api/snippets", SnippetsRoutes);
 app.use("/api/comment", COmmentRoutes);
+app.use(errorHandler);
 
 // Start server
 app.listen(port, () => {
