@@ -10,6 +10,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import { ref } from "process";
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle({ client: sql });
 
@@ -46,7 +47,7 @@ export const setAccessCookie = (res: Response, token: string) => {
   res.cookie("accessToken", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 60 * 60 * 1000, // 60 minutes
   });
 };
@@ -55,7 +56,7 @@ export const setRefreshCookie = (res: Response, token: string) => {
   res.cookie("refreshToken", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
@@ -167,6 +168,8 @@ export const userSignin = asyncHandler(async (req: Request, res: Response) => {
   //   sameSite: "none",
   //   maxAge: 60 * 60 * 1000, // 60 minutes
   // });
+  console.log("access token", accessToken);
+  console.log("refresh token", refreshToken);
 
   setAccessCookie(res, accessToken);
   setRefreshCookie(res, refreshToken);

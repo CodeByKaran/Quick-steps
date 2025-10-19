@@ -16,9 +16,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { signInUser } from "@/functions/userFunctions";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import axios, { AxiosError } from "axios";
+import { Eye, EyeOff, Mail } from "lucide-react";
 
 const formSchema = z.object({
   email: z.email("Invalid email").min(1, "Email is required"),
@@ -27,6 +30,8 @@ const formSchema = z.object({
 
 export function SignInForm() {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState("");
+  const [show, setShow] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,16 +39,27 @@ export function SignInForm() {
       password: "",
     },
   });
+  const queryClient = useQueryClient();
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) =>
       signInUser(data.email, data.password),
     onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["user-session-check"],
+        refetchType: "all",
+      });
       console.log("User signed in successfully:", data);
       router.push("/");
     },
     onError: (error) => {
       console.log("Error signing in user:", error);
+      if (axios.isAxiosError(error))
+        setErrorMessage(
+          `${
+            error.response?.data?.message || "Sign in failed. Please try again."
+          }`
+        );
     },
   });
 
@@ -65,12 +81,15 @@ export function SignInForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="Enter your email"
-                      {...field}
-                      className="focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <div className="flex gap-x-2 items-center">
+                      <Input
+                        type="email"
+                        placeholder="Enter your email"
+                        {...field}
+                        className="focus:ring-2 focus:ring-primary focus:outline-none"
+                      />
+                      <Mail />
+                    </div>
                   </FormControl>
                   {/* <FormDescription>Enter your email address.</FormDescription> */}
                   <FormMessage />
@@ -84,20 +103,36 @@ export function SignInForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Enter your password"
-                      {...field}
-                      className="focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
+                    <div className="flex gap-x-2 items-center">
+                      <Input
+                        type={show ? "text" : "password"}
+                        placeholder="Enter your password"
+                        {...field}
+                        className="focus:ring-2 focus:ring-primary focus:outline-none"
+                      ></Input>
+                      {show ? (
+                        <Eye
+                          onClick={() => setShow(false)}
+                          className="cursor-pointer"
+                        />
+                      ) : (
+                        <EyeOff
+                          onClick={() => setShow(true)}
+                          className="cursor-pointer"
+                        />
+                      )}
+                    </div>
                   </FormControl>
                   {/* <FormDescription>Enter your password.</FormDescription> */}
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full mt-5">
-              Sign In
+            {errorMessage && (
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            )}
+            <Button type="submit" className="w-full mt-5" disabled={isPending}>
+              {isPending ? <span>Signing in...</span> : <span>Sign In</span>}
             </Button>
           </form>
         </Form>

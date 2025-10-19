@@ -13,14 +13,41 @@ import {
   NavigationMenuTrigger,
 } from "./ui/navigation-menu";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { LogOut } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { signoutUser } from "@/functions/userFunctions";
 
-export default function TabletDrawer() {
+export default function TabletDrawer({
+  username,
+  sessionLoading,
+}: {
+  username?: string;
+  sessionLoading?: boolean;
+}) {
   const router = useRouter();
+
+  const queryClient = useQueryClient();
+
+  const { mutate: signout, isPending: signoutPending } = useMutation({
+    mutationFn: async () => signoutUser(),
+    onSuccess: () => {
+      // Invalidate or remove the session check query
+      queryClient.invalidateQueries({
+        queryKey: ["user-session-check"],
+        refetchType: "all",
+      });
+
+      // OR to completely remove it:
+      // queryClient.removeQueries({ queryKey: ["user-session-check"] });
+    },
+  });
 
   return (
     <Drawer.Root direction="right">
       <Drawer.Trigger
-        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3 max-xl:block min-xl:hidden"
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 max-[768px]:-mr-3 has-[&gt;svg]:px-3 max-xl:block min-xl:hidden"
         aria-label="Open tablet menu"
       >
         Menu
@@ -98,17 +125,41 @@ export default function TabletDrawer() {
                       <ModeToggle />
                     </span>
 
-                    <div>
-                      <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300 cursor-default  min-[768px]:hidden">
-                        <AvatarImage
-                          src="/avatar-placeholder.png"
-                          alt="User avatar"
-                        />
-                        <AvatarFallback className="bg-primary text-white dark:text-black">
-                          U
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
+                    {username ? (
+                      <Popover>
+                        <PopoverTrigger>
+                          {" "}
+                          <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300 cursor-default  md:hidden">
+                            <AvatarImage
+                              src="/avatar-placeholder.png"
+                              alt="User avatar"
+                            />
+                            <AvatarFallback className="bg-primary text-white dark:text-black font-semibold">
+                              {username?.charAt(0)?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-fit m-2 bg-background/45 backdrop-blur-md border border-border">
+                          <Button
+                            variant={"destructive"}
+                            className="font-poppins w-[150px]"
+                            onClick={() => signout()}
+                          >
+                            {" "}
+                            Sign Out
+                            <LogOut />
+                          </Button>
+                        </PopoverContent>
+                      </Popover>
+                    ) : sessionLoading ? (
+                      <div className="w-8 h-8 rounded-full bg-primary animate-pulse md:block hidden ring-1 ring-primary ring-offset-4 ring-offset-background"></div>
+                    ) : (
+                      <Link href="/sign-in">
+                        <Button className="px-4 py-1.5 bg-primary rounded-md hover:bg-primary/90 transition-colors text-sm  md:hidden">
+                          Signin
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                   <div>
                     <span className="min-[1000px]:hidden w-full mt-9">

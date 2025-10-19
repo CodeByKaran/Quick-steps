@@ -435,7 +435,7 @@ export const paginateRandomSnippets = asyncHandler(
       limit: limitNum,
     };
 
-    console.log("response data is : " + JSON.stringify(responseData, null, 2));
+    // console.log("response data is : " + JSON.stringify(responseData, null, 2));
 
     return res
       .status(200)

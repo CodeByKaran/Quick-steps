@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -18,9 +18,11 @@ import {
   NavigationMenuTrigger,
 } from "./ui/navigation-menu";
 import useLogger from "@/hooks/useLogger";
-import { useQuery } from "@tanstack/react-query";
-import { checkSession } from "@/functions/userFunctions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { checkSession, signoutUser } from "@/functions/userFunctions";
 import { Button } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { LogOut } from "lucide-react";
 
 const navLinks = [
   { label: "Snippets", href: "/" },
@@ -35,7 +37,27 @@ export default function Navbar() {
   } = useQuery({
     queryKey: ["user-session-check"],
     queryFn: async () => checkSession(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: false,
     // 5 minutes
+  });
+
+  const queryClient = useQueryClient();
+
+  const { mutate: signout, isPending: signoutPending } = useMutation({
+    mutationFn: async () => signoutUser(),
+    onSuccess: () => {
+      // queryClient.removeQueries({ queryKey: ["user-session-check"] });
+      // Invalidate or remove the session check query
+      queryClient.invalidateQueries({
+        queryKey: ["user-session-check"],
+        refetchType: "all",
+      });
+
+      // OR to completely remove it:
+      // queryClient.removeQueries({ queryKey: ["user-session-check"] });
+    },
   });
   // const [active, setActive] = useState("/");
   const path = usePathname();
@@ -149,7 +171,10 @@ export default function Navbar() {
 
         {/* Right side - Search and Avatar (hidden on mobile) */}
         <div className="flex items-center gap-4  ml-6">
-          <TabletDrawer />
+          <TabletDrawer
+            username={sessionData?.user?.username}
+            sessionLoading={sessionLoading}
+          />
           <span className="max-[1000px]:hidden">
             <SearchDialog />
           </span>
@@ -157,15 +182,41 @@ export default function Navbar() {
             <ModeToggle />
           </span>
           {sessionData ? (
-            <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300 cursor-default md:block hidden">
-              <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
-              <AvatarFallback className="bg-primary text-white dark:text-black">
-                {sessionData.data?.user?.username?.charAt(0)?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <Popover>
+              <PopoverTrigger>
+                {" "}
+                <Avatar className="bg-primary ring-1 ring-primary ring-offset-4 ring-offset-background hover:scale-105 transition-transform duration-300 cursor-default md:block hidden">
+                  <AvatarImage
+                    src="/avatar-placeholder.png"
+                    alt="User avatar"
+                  />
+                  <AvatarFallback className="bg-primary text-white dark:text-black font-semibold">
+                    {sessionData?.user?.username?.charAt(0)?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </PopoverTrigger>
+              <PopoverContent className="w-fit m-2 bg-background/45 backdrop-blur-md border border-border">
+                <Button
+                  variant="destructive"
+                  className="font-poppins w-[150px]"
+                  onClick={() => signout()}
+                >
+                  {signoutPending ? (
+                    <span>Signing out...</span>
+                  ) : (
+                    <>
+                      Sign Out
+                      <LogOut />
+                    </>
+                  )}
+                </Button>
+              </PopoverContent>
+            </Popover>
+          ) : sessionLoading ? (
+            <div className="w-8 h-8 rounded-full bg-primary animate-pulse md:block hidden ring-1 ring-primary ring-offset-4 ring-offset-background"></div>
           ) : (
             <Link href="/sign-in">
-              <Button className="px-4 py-1.5 bg-primary rounded-md hover:bg-primary/90 transition-colors text-sm md:block hidden">
+              <Button className="px-4 py-1.5 bg-primary rounded-md hover:bg-primary/90 transition-colors text-sm md:block hidden font-poppins">
                 Signin
               </Button>
             </Link>
