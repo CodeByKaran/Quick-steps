@@ -317,6 +317,8 @@ export const isUserSignedIn = (
     return res.status(401).json({ success: false, message: "Not signed in" });
   }
 
+  console.log("accestoken :", token);
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
     // If needed, attach user info to request object
