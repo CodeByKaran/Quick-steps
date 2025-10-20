@@ -195,9 +195,46 @@ export const userSignin = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //user Signout controller
+// export const userSignout = asyncHandler(async (req: Request, res: Response) => {
+//   const cookiesOptions = {
+//     httpOnly: true,
+//     secure: process.env.NODE_ENV === "production" ? true : false,
+//     sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as
+//       | "none"
+//       | "lax",
+//   };
+//   console.log("before access cookies:", req.cookies?.accessToken);
+//   console.log("before refresh cookies:", req.cookies?.refreshToken);
+
+//   res.clearCookie("accessToken", cookiesOptions);
+//   res.clearCookie("refreshToken", cookiesOptions);
+
+//   console.log("after access cookies:", req.cookies?.accessToken);
+//   console.log("after refresh cookies:", req.cookies?.refreshToken);
+
+//   res
+//     .status(200)
+//     .json(new SuccessResponse("User logged out successfully", null));
+// });
 export const userSignout = asyncHandler(async (req: Request, res: Response) => {
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
+  const isProduction = process.env.NODE_ENV === "production";
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const),
+    path: "/",
+  };
+
+  console.log("before access cookies:", req.cookies?.accessToken);
+  console.log("before refresh cookies:", req.cookies?.refreshToken);
+
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
+
+  console.log("after access cookies:", req.cookies?.accessToken);
+  console.log("after refresh cookies:", req.cookies?.refreshToken);
+
   res
     .status(200)
     .json(new SuccessResponse("User logged out successfully", null));
