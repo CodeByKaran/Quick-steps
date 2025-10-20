@@ -61,13 +61,13 @@ export default function Navbar() {
   });
   // const [active, setActive] = useState("/");
   const path = usePathname();
-  useLogger("session data in nav bar:" + JSON.stringify(sessionData?.data), [
-    sessionData,
-  ]);
+  // useLogger("session data in nav bar:" + JSON.stringify(sessionData?.data), [
+  //   sessionData,
+  // ]);
 
-  useLogger("session error in nav bar:" + JSON.stringify(sessionError), [
-    sessionError,
-  ]);
+  // useLogger("session error in nav bar:" + JSON.stringify(sessionError), [
+  //   sessionError,
+  // ]);
 
   const { scrollY } = useScroll();
   const [scrollDirection, setScrollDirection] = useState("down");
